@@ -1,6 +1,6 @@
 # Development and Implementation of SNMP Management Software (Network Data Analysis)
 -   EN  [English](README_EN.md)
-- zh_CN [简体中文](readme/README.md)
+- zh_CN [简体中文](README.md)
 ## Development of SNMP Management Software:
 
 1.Utilize Python programming software and call the corresponding SNMP++ library to develop and implement an SNMP management software.
