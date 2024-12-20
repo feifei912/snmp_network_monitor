@@ -20,7 +20,7 @@ python 3.10 Download https://www.python.org/ftp/python/3.10.10/python-3.10.10-am
 ## network_monitor   
 ![image](https://github.com/user-attachments/assets/7abf44a8-64ca-4562-bb16-664b7fbd7889)   
 
-## network_monitor_choose_OID   
+## network_monitor_choose_interface.py   
 ![image](https://github.com/user-attachments/assets/fa90ddb1-1ae3-41f8-99a5-4f3b1b549e93)   
 
 ---
