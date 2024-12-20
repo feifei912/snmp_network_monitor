@@ -14,10 +14,10 @@ python 3.10 Download https://www.python.org/ftp/python/3.10.10/python-3.10.10-am
 
 ---
 
-## get_snmp_interface_descriptions
+## get_snmp_interface_descriptions.py
 ![image](https://github.com/user-attachments/assets/13a683a7-c59a-4c32-832f-16de2a62cf0c)
 
-## network_monitor   
+## network_monitor.py   
 ![image](https://github.com/user-attachments/assets/7abf44a8-64ca-4562-bb16-664b7fbd7889)   
 
 ## network_monitor_choose_interface.py   
