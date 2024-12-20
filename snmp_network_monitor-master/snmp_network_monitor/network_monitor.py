@@ -34,6 +34,9 @@ class SNMPMonitor:
     def test(self):
         pass
 
+    def test2(self):
+        pass
+
     def create_gui(self):
         # 创建控制框架
         control_frame = tk.Frame(self.root)
