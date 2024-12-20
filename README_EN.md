@@ -2,8 +2,13 @@
 
 ##Development of SNMP Management Software:
 
-1.Utilize Python programming software and call the corresponding SNMP++ library to develop and implement an SNMP management software.The software should access and configure network devices within a local area network (LAN).Using the lab environment as an example, query the corresponding nodes to obtain key information, including the number of network packets received and sent by the host.Use relevant visualization controls to display the number of network packets received and sent using different curves on the same coordinate system, with a sampling frequency of 10 seconds.   
-2.Display on Webpage or GUI Window:   Display the information on a webpage or a GUI window.On the same coordinate system, show two different curves clearly labeled to indicate the number of received packets and sent packets.
+1.Utilize Python programming software and call the corresponding SNMP++ library to develop and implement an SNMP management software.   
+The software should access and configure network devices within a local area network (LAN).   
+Using the lab environment as an example, query the corresponding nodes to obtain key information, including the number of network packets received and sent by the host.
+Use relevant visualization controls to display the number of network packets received and sent using different curves on the same coordinate system, with a sampling frequency of 10 seconds.      
+2.Display on Webpage or GUI Window:   
+Display the information on a webpage or a GUI window.   
+On the same coordinate system, show two different curves clearly labeled to indicate the number of received packets and sent packets.
 
 ---
 
