@@ -4,9 +4,9 @@ import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
 from pysnmp.hlapi import *
-import numpy as np
 from collections import deque
 import socket
+import matplotlib.font_manager as fm
 
 class SNMPMonitor:
     def __init__(self, root):
@@ -51,6 +51,16 @@ class SNMPMonitor:
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
+        # 设置中文字体
+        self.set_chinese_font()
+
+    def set_chinese_font(self):
+        # 使用SimHei字体
+        font_path = 'C:/Windows/Fonts/simhei.ttf'  # 确保字体路径正确
+        font_prop = fm.FontProperties(fname=font_path)
+        plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用SimHei字体
+        plt.rcParams['axes.unicode_minus'] = False    # 解决负号显示问题
+
     def get_snmp_data(self, oid):
         try:
             errorIndication, errorStatus, errorIndex, varBinds = next(
@@ -82,6 +92,9 @@ class SNMPMonitor:
             # 获取SNMP数据
             received = self.get_snmp_data('1.3.6.1.2.1.2.2.1.11.1')  # 替换为实际的接收单播包数OID
             sent = self.get_snmp_data('1.3.6.1.2.1.2.2.1.17.1')  # 替换为实际的发送单播包数OID
+
+            # 打印调试信息
+            print(f"Received: {received}, Sent: {sent}")
 
             if received is None or sent is None:
                 self.running = False
