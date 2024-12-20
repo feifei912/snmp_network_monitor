@@ -11,7 +11,8 @@ python 3.10 Download https://www.python.org/ftp/python/3.10.10/python-3.10.10-am
 2．要求：在网页上或者GUI窗口中显示出来，同一个坐标上显示两个不同曲线，标识清晰接收数据包和发送数据包。   
 ---
 ## get_snmp_interface_descriptions
-![image](https://github.com/user-attachments/assets/1064ba1f-6cb2-45b9-b61f-5b65efbd1122)   
+![image](https://github.com/user-attachments/assets/13a683a7-c59a-4c32-832f-16de2a62cf0c)
+
 ## network_monitor   
 ![image](https://github.com/user-attachments/assets/7abf44a8-64ca-4562-bb16-664b7fbd7889)   
 ## network_monitor_choose_OID   
