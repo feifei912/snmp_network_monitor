@@ -7,12 +7,18 @@ from pysnmp.hlapi import *
 from collections import deque
 import socket
 import matplotlib.font_manager as fm
+import os
 
 class SNMPMonitor:
     def __init__(self, root):
         self.root = root
         self.root.title("SNMP网络监控")
         self.root.geometry("1000x600")
+
+        # 初始化SNMP配置
+        self.host = '127.0.0.1'  # 使用你的IP地址
+        self.community = 'public'
+        self.port = 161
 
         # 创建数据存储
         self.max_points = 30  # 存储最近30个数据点
@@ -23,13 +29,12 @@ class SNMPMonitor:
         # 创建图形界面
         self.create_gui()
 
-        # SNMP配置
-        self.host = '127.0.0.1'  # 默认本地主机
-        self.community = 'public'
-        self.port = 161
-
         # 控制标志
         self.running = False
+        self.ended = False
+
+        # 打开文件记录数据变化
+        self.log_file = open("network_data_log.txt", "a")
 
     def create_gui(self):
         # 创建控制框架
@@ -39,12 +44,16 @@ class SNMPMonitor:
         # 添加输入框和按钮
         tk.Label(control_frame, text="主机:").pack(side=tk.LEFT, padx=5)
         self.host_entry = tk.Entry(control_frame, width=15)
-        self.host_entry.insert(0, "127.0.0.1")
+        self.host_entry.insert(0, self.host)
         self.host_entry.pack(side=tk.LEFT, padx=5)
 
         self.start_button = tk.Button(control_frame, text="开始监控",
                                       command=self.toggle_monitoring)
         self.start_button.pack(side=tk.LEFT, padx=5)
+
+        self.end_button = tk.Button(control_frame, text="结束监控",
+                                    command=self.end_monitoring)
+        self.end_button.pack(side=tk.LEFT, padx=5)
 
         # 创建图表
         self.fig, self.ax = plt.subplots(figsize=(10, 6))
@@ -72,35 +81,39 @@ class SNMPMonitor:
             )
 
             if errorIndication:
-                messagebox.showerror("错误", f"SNMP 错误: {errorIndication}")
+                print(f"SNMP 错误: {errorIndication}")
                 return None
             elif errorStatus:
-                messagebox.showerror("错误", f"SNMP 错误: {errorStatus}")
+                print(f"SNMP 错误: {errorStatus.prettyPrint()}")
                 return None
             else:
-                return int(varBinds[0][1])
+                for varBind in varBinds:
+                    return int(varBind[1])
 
         except Exception as e:
-            messagebox.showerror("错误", f"获取 SNMP 数据错误: {str(e)}")
+            print(f"获取 SNMP 数据错误: {str(e)}")
             return None
 
     def update_plot(self):
-        if not self.running:
+        if not self.running or self.ended:
             return
 
         try:
-            # 获取SNMP数据
-            received = self.get_snmp_data('1.3.6.1.2.1.2.2.1.11.1')  # 替换为实际的接收单播包数OID
-            sent = self.get_snmp_data('1.3.6.1.2.1.2.2.1.17.1')  # 替换为实际的发送单播包数OID
+            # 获取 SNMP 数据
+            received = self.get_snmp_data('1.3.6.1.2.1.2.2.1.11.26')  # Intel(R) Wi-Fi 6 AX201 160MHz 的接收单播包数
+            sent = self.get_snmp_data('1.3.6.1.2.1.2.2.1.17.26')  # Intel(R) Wi-Fi 6 AX201 160MHz 的发送单播包数
 
             # 打印调试信息
-            print(f"Received: {received}, Sent: {sent}")
+            print(f"收到: {received}, 发送: {sent}")
 
             if received is None or sent is None:
                 self.running = False
                 messagebox.showerror("错误", "获取 SNMP 数据失败，停止监控")
                 self.start_button.config(text="开始监控")
                 return
+
+            # 记录数据变化
+            self.log_file.write(f"Time: {time.time()}, Receive: {received}, Send: {sent}\n")
 
             # 更新数据
             current_time = time.time()
@@ -128,22 +141,26 @@ class SNMPMonitor:
             # 更新画布
             self.canvas.draw()
 
-            # 每10秒更新一次
-            self.root.after(10000, self.update_plot)
+            # 缩短更新间隔为1秒
+            self.root.after(1000, self.update_plot)
 
         except Exception as e:
-            messagebox.showerror("错误", f"更新错误: {str(e)}")
+            print(f"更新错误: {str(e)}")
             self.running = False
             self.start_button.config(text="开始监控")
 
     def toggle_monitoring(self):
+        if self.ended:
+            messagebox.showinfo("信息", "监控已结束，无法重新启动")
+            return
+
         if not self.running:
             self.host = self.host_entry.get()
             if not self.validate_host(self.host):
                 messagebox.showerror("错误", "无效的主机地址")
                 return
             self.running = True
-            self.start_button.config(text="停止监控")
+            self.start_button.config(text="暂停监控")
             self.times.clear()
             self.received_data.clear()
             self.sent_data.clear()
@@ -151,6 +168,13 @@ class SNMPMonitor:
         else:
             self.running = False
             self.start_button.config(text="开始监控")
+
+    def end_monitoring(self):
+        self.running = False
+        self.ended = True
+        self.start_button.config(state=tk.DISABLED)
+        self.log_file.close()
+        messagebox.showinfo("信息", "监控已结束")
 
     def validate_host(self, host):
         try:
