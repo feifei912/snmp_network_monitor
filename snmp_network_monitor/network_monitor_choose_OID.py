@@ -17,7 +17,7 @@ class SNMPMonitor:
         self.root.geometry("1000x650")
 
         # 初始化 SNMP 配置
-        self.host = '192.168.0.107'  # 修改为目标设备的 IP 地址
+        self.host = '127.0.0.1'  # 修改为目标设备的 IP 地址
         self.community = 'public'
         self.port = 161
 
@@ -29,13 +29,13 @@ class SNMPMonitor:
 
         # 定义一个接口映射表（可按需扩充），其中键为可读的接口名称，值为 (接收OID, 发送OID) 的元组
         self.interface_options = {
-            "Realtek Gaming 2.5GbE Family Controller": (
-                "1.3.6.1.2.1.2.2.1.11.2",  # 接收数据包数 OID
-                "1.3.6.1.2.1.2.2.1.17.2"  # 发送数据包数 OID
-            ),
             "Intel(R) Wi-Fi 6 AX201 160MHz": (
                 "1.3.6.1.2.1.2.2.1.11.26",
                 "1.3.6.1.2.1.2.2.1.17.26"
+            ),
+            "Realtek Gaming 2.5GbE Family Controller": (
+                "1.3.6.1.2.1.2.2.1.11.2",  # 接收数据包数 OID
+                "1.3.6.1.2.1.2.2.1.17.2"  # 发送数据包数 OID
             ),
             "VMware Virtual Ethernet (VMnet8)": (
                 "1.3.6.1.2.1.2.2.1.11.9",
@@ -55,7 +55,8 @@ class SNMPMonitor:
         self.ended = False
 
         # 打开日志文件以记录数据
-        self.log_file = open("network_data_log.txt", "a")
+        self.log_file = open("network_data_log.txt", "a", encoding="utf-8")
+        self.header_logged = False  # 添加标志，记录是否已输出头信息
 
     def create_gui(self):
 
@@ -161,8 +162,12 @@ class SNMPMonitor:
                 return
 
             # 记录到日志文件
+            if not self.header_logged:
+                self.log_file.write("\n以下来自network_monitor_choose_OID\n")
+                self.header_logged = True  # 设置标志为 True
+
             now = time.time()
-            self.log_file.write(f"{now}, {self.selected_interface}, 接收: {received}, 发送: {sent}\n")
+            self.log_file.write(f"时间: {now}, 接口: {self.selected_interface}, 接收: {received}, 发送: {sent}\n")
 
             # 更新数据队列
             if not self.times:

@@ -34,7 +34,8 @@ class SNMPMonitor:
         self.ended = False
 
         # 打开文件记录数据变化
-        self.log_file = open("network_data_log.txt", "a")
+        self.log_file = open("network_data_log.txt", "a", encoding="utf-8")
+        self.header_logged = False  # 添加标志，记录是否已输出头信息
 
     def create_gui(self):
         # 创建控制框架
@@ -113,7 +114,11 @@ class SNMPMonitor:
                 return
 
             # 记录数据变化
-            self.log_file.write(f"Time: {time.time()}, Receive: {received}, Send: {sent}\n")
+            if not self.header_logged:
+                self.log_file.write("\n以下来自network_monitor\n")
+                self.header_logged = True  # 设置标志为True
+
+            self.log_file.write(f"时间: {time.time()}, 接收: {received}, 发送: {sent}\n")
 
             # 更新数据
             current_time = time.time()
