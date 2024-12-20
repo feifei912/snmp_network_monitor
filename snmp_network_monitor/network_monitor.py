@@ -86,6 +86,7 @@ class SNMPMonitor:
             if received is None or sent is None:
                 self.running = False
                 messagebox.showerror("错误", "获取 SNMP 数据失败，停止监控")
+                self.start_button.config(text="开始监控")
                 return
 
             # 更新数据
@@ -120,6 +121,7 @@ class SNMPMonitor:
         except Exception as e:
             messagebox.showerror("错误", f"更新错误: {str(e)}")
             self.running = False
+            self.start_button.config(text="开始监控")
 
     def toggle_monitoring(self):
         if not self.running:
