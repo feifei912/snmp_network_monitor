@@ -6,6 +6,7 @@ import time
 from pysnmp.hlapi import *
 import numpy as np
 from collections import deque
+import socket
 
 class SNMPMonitor:
     def __init__(self, root):
@@ -84,6 +85,7 @@ class SNMPMonitor:
 
             if received is None or sent is None:
                 self.running = False
+                messagebox.showerror("错误", "获取 SNMP 数据失败，停止监控")
                 return
 
             # 更新数据
@@ -122,6 +124,9 @@ class SNMPMonitor:
     def toggle_monitoring(self):
         if not self.running:
             self.host = self.host_entry.get()
+            if not self.validate_host(self.host):
+                messagebox.showerror("错误", "无效的主机地址")
+                return
             self.running = True
             self.start_button.config(text="停止监控")
             self.times.clear()
@@ -131,6 +136,13 @@ class SNMPMonitor:
         else:
             self.running = False
             self.start_button.config(text="开始监控")
+
+    def validate_host(self, host):
+        try:
+            socket.gethostbyname(host)
+            return True
+        except socket.error:
+            return False
 
 def main():
     root = tk.Tk()
