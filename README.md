@@ -14,7 +14,10 @@ python 3.11以下
 python 3.10 Download https://www.python.org/ftp/python/3.10.10/python-3.10.10-amd64.exe</p>
 
 ---
-目前就这些，很简陋的功能，会不会更新以后再说吧......   先运行get_snmp_interface_descriptions.exe查找对应的OID，将network_monitor_input中的最后一位数修改为要监控的接口
+
+目前就这些，很简陋的功能，会不会更新以后再说吧......   
+先运行get_snmp_interface_descriptions.exe查找对应的OID，将network_monitor_input中的最后一位数修改为要监控的接口
+
 ---
 ## get_snmp_interface_descriptions.py
 ![image](https://github.com/user-attachments/assets/13a683a7-c59a-4c32-832f-16de2a62cf0c)
