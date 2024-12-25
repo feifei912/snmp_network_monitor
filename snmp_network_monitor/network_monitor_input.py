@@ -1,6 +1,5 @@
 import tkinter as tk
 from tkinter import messagebox
-from tkinter import ttk
 import matplotlib.pyplot as plt
 from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
 import time
@@ -13,15 +12,16 @@ import os
 class SNMPMonitor:
     def __init__(self, root):
         self.root = root
-        self.root.title("SNMP网络监控 - 可选接口")
-        self.root.geometry("1000x650")
+        self.root.title("SNMP网络监控")
+        self.root.geometry("1000x620")
 
         # 设置语言字典
         self.lang_dict = {
             "zh": {
-                "title": "SNMP网络监控 - 可选接口",
+                "title": "SNMP网络监控",
                 "host_label": "主机:",
-                "interface_label": "接口选择:",
+                "received_oid_label": "接收OID:",
+                "sent_oid_label": "发送OID:",
                 "start_monitor": "开始监控",
                 "pause_monitor": "暂停监控",
                 "end_monitor": "结束监控",
@@ -29,17 +29,18 @@ class SNMPMonitor:
                 "invalid_host": "无效的主机地址",
                 "snmp_error": "获取 SNMP 数据失败，停止监控",
                 "info_end": "监控已结束",
-                "time_label": "时间 (秒)",
+                "time_label": "时间（秒）",
                 "packet_label": "数据包数",
-                "chart_title": "网络流量监控 - 可选接口",
+                "chart_title": "网络流量监控",
                 "error_title": "错误",
                 "received_label": "接收的数据包数",
                 "sent_label": "发送的数据包数"
             },
             "en": {
-                "title": "SNMP Network Monitor - Selectable Interface",
+                "title": "SNMP Network Monitor",
                 "host_label": "Host:",
-                "interface_label": "Select Interface:",
+                "received_oid_label": "Received OID:",
+                "sent_oid_label": "Sent OID:",
                 "start_monitor": "Start Monitoring",
                 "pause_monitor": "Pause Monitoring",
                 "end_monitor": "End Monitoring",
@@ -49,7 +50,7 @@ class SNMPMonitor:
                 "info_end": "Monitoring ended",
                 "time_label": "Time (s)",
                 "packet_label": "Packets",
-                "chart_title": "Network Traffic Monitor - Selectable Interface",
+                "chart_title": "Network Traffic Monitor",
                 "error_title": "Error",
                 "received_label": "Received Packets",
                 "sent_label": "Sent Packets"
@@ -59,118 +60,115 @@ class SNMPMonitor:
         # 当前语言，默认为中文
         self.current_lang = "zh"
 
-        # 初始化 SNMP 配置
-        self.host = '127.0.0.1'
+        # 初始化SNMP配置
+        self.host = '127.0.0.1'  # 使用你的IP地址
         self.community = 'public'
         self.port = 161
+        self.received_oid = '1.3.6.1.2.1.2.2.1.11.26'
+        self.sent_oid = '1.3.6.1.2.1.2.2.1.17.26'
 
-        # 数据存储队列（用于绘图）
-        self.max_points = 30
+        # 创建数据存储
+        self.max_points = 30  # 存储最近30个数据点
         self.times = deque(maxlen=self.max_points)
         self.received_data = deque(maxlen=self.max_points)
         self.sent_data = deque(maxlen=self.max_points)
 
-        # 定义接口映射
-        self.interface_options = {
-            "TEST": (
-                "1.3.6.1.2.1.2.2.1.11.26",
-                "1.3.6.1.2.1.2.2.1.17.26"
-            ),
-            "Realtek Gaming 2.5GbE Family Controller": (
-                "1.3.6.1.2.1.2.2.1.11.2",
-                "1.3.6.1.2.1.2.2.1.17.2"
-            ),
-            "VMware Virtual Ethernet (VMnet8)": (
-                "1.3.6.1.2.1.2.2.1.11.9",
-                "1.3.6.1.2.1.2.2.1.17.9"
-            ),
-        }
-        self.selected_interface = list(self.interface_options.keys())[0]
-
-        # 创建 GUI
+        # 创建图形界面
         self.create_gui()
 
-        # 监控标志
+        # 控制标志
         self.running = False
         self.ended = False
 
-        # 日志文件
+        # 打开文件记录数据变化
         self.log_file = open("network_data_log.txt", "a", encoding="utf-8")
         self.header_logged = False
 
     def create_gui(self):
-        # 语言选择框
+        # 语言选择下拉框
         lang_frame = tk.Frame(self.root)
         lang_frame.pack(pady=5)
 
         tk.Label(lang_frame, text="语言 / Language:").pack(side=tk.LEFT, padx=5)
         self.lang_var = tk.StringVar()
-        self.lang_var.set("中文")
+        self.lang_var.set("中文")  # 默认显示“中文”
         lang_options = ["中文", "English"]
         self.lang_menu = tk.OptionMenu(lang_frame, self.lang_var, *lang_options, command=self.switch_language)
         self.lang_menu.pack(side=tk.LEFT, padx=5)
 
-        control_frame = tk.Frame(self.root)
-        control_frame.pack(pady=5)
+        # 创建控制框架
+        self.control_frame = tk.Frame(self.root)
+        self.control_frame.pack(pady=5)
 
-        # 主机地址
-        self.host_label = tk.Label(control_frame, text=self.lang_dict[self.current_lang]["host_label"])
-        self.host_label.pack(side=tk.LEFT, padx=5)
-
-        self.host_entry = tk.Entry(control_frame, width=15)
+        # 添加主机输入
+        self.host_label = tk.Label(self.control_frame, text=self.lang_dict[self.current_lang]["host_label"])
+        self.host_label.grid(row=0, column=0, padx=5, pady=5, sticky="e")
+        self.host_entry = tk.Entry(self.control_frame, width=15)
         self.host_entry.insert(0, self.host)
-        self.host_entry.pack(side=tk.LEFT, padx=5)
+        self.host_entry.grid(row=0, column=1, padx=5, pady=5)
 
-        # 接口选择
-        self.interface_label = tk.Label(control_frame, text=self.lang_dict[self.current_lang]["interface_label"])
-        self.interface_label.pack(side=tk.LEFT, padx=5)
+        # 添加接收OID输入
+        self.received_oid_label = tk.Label(self.control_frame, text=self.lang_dict[self.current_lang]["received_oid_label"])
+        self.received_oid_label.grid(row=1, column=0, padx=5, pady=5, sticky="e")
+        self.received_oid_entry = tk.Entry(self.control_frame, width=30)
+        self.received_oid_entry.insert(0, self.received_oid)
+        self.received_oid_entry.grid(row=1, column=1, padx=5, pady=5)
 
-        self.interface_combo = ttk.Combobox(control_frame,
-                                             values=list(self.interface_options.keys()),
-                                             width=35)
-        self.interface_combo.current(0)
-        self.interface_combo.pack(side=tk.LEFT, padx=5)
+        # 添加发送OID输入
+        self.sent_oid_label = tk.Label(self.control_frame, text=self.lang_dict[self.current_lang]["sent_oid_label"])
+        self.sent_oid_label.grid(row=2, column=0, padx=5, pady=5, sticky="e")
+        self.sent_oid_entry = tk.Entry(self.control_frame, width=30)
+        self.sent_oid_entry.insert(0, self.sent_oid)
+        self.sent_oid_entry.grid(row=2, column=1, padx=5, pady=5)
 
-        self.start_button = tk.Button(control_frame, text=self.lang_dict[self.current_lang]["start_monitor"],
+        # 添加开始/暂停和结束监控按钮
+        self.start_button = tk.Button(self.control_frame, text=self.lang_dict[self.current_lang]["start_monitor"],
                                       command=self.toggle_monitoring)
-        self.start_button.pack(side=tk.LEFT, padx=5)
+        self.start_button.grid(row=0, column=2, padx=10, pady=5)
 
-        self.end_button = tk.Button(control_frame, text=self.lang_dict[self.current_lang]["end_monitor"],
+        self.end_button = tk.Button(self.control_frame, text=self.lang_dict[self.current_lang]["end_monitor"],
                                     command=self.end_monitoring)
-        self.end_button.pack(side=tk.LEFT, padx=5)
+        self.end_button.grid(row=1, column=2, padx=10, pady=5)
 
-        self.fig, self.ax = plt.subplots(figsize=(10, 5))
+        # 创建图表
+        self.fig, self.ax = plt.subplots(figsize=(10, 6))
         self.canvas = FigureCanvasTkAgg(self.fig, master=self.root)
         self.canvas.get_tk_widget().pack(fill=tk.BOTH, expand=True)
 
+        # 设置中文字体
         self.set_chinese_font()
-
-        # 设置窗口标题
+        # 初始化窗口标题
         self.root.title(self.lang_dict[self.current_lang]["title"])
 
     def switch_language(self, _):
+        # 根据下拉框选择更新 current_lang
         choice = self.lang_var.get()
         if choice == "中文":
             self.current_lang = "zh"
         else:
             self.current_lang = "en"
 
+        # 更新界面文字
         self.root.title(self.lang_dict[self.current_lang]["title"])
         self.host_label.config(text=self.lang_dict[self.current_lang]["host_label"])
-        self.interface_label.config(text=self.lang_dict[self.current_lang]["interface_label"])
+        self.received_oid_label.config(text=self.lang_dict[self.current_lang]["received_oid_label"])
+        self.sent_oid_label.config(text=self.lang_dict[self.current_lang]["sent_oid_label"])
+
         if self.running:
             self.start_button.config(text=self.lang_dict[self.current_lang]["pause_monitor"])
         else:
             self.start_button.config(text=self.lang_dict[self.current_lang]["start_monitor"])
         self.end_button.config(text=self.lang_dict[self.current_lang]["end_monitor"])
 
+        # 立即刷新
         self.root.update_idletasks()
 
     def set_chinese_font(self):
-        font_path = 'C:/Windows/Fonts/simhei.ttf'
+        # 使用SimHei字体
+        font_path = 'C:/Windows/Fonts/simhei.ttf'  # 确保字体路径正确
         if os.path.exists(font_path):
             fm.FontProperties(fname=font_path)
-            plt.rcParams['font.sans-serif'] = ['SimHei']
+            plt.rcParams['font.sans-serif'] = ['SimHei']  # 使用SimHei字体
         plt.rcParams['axes.unicode_minus'] = False
 
     def get_snmp_data(self, oid):
@@ -201,21 +199,15 @@ class SNMPMonitor:
             return
 
         try:
-            current_interface = self.interface_combo.get()
+            # 获取用户输入的OID
+            self.received_oid = self.received_oid_entry.get()
+            self.sent_oid = self.sent_oid_entry.get()
 
-            if current_interface != self.selected_interface:
-                self.selected_interface = current_interface
-                self.times.clear()
-                self.received_data.clear()
-                self.sent_data.clear()
-                self.start_time = time.time()
+            # 获取 SNMP 数据
+            received = self.get_snmp_data(self.received_oid)
+            sent = self.get_snmp_data(self.sent_oid)
 
-            received_oid, sent_oid = self.interface_options[self.selected_interface]
-
-            received = self.get_snmp_data(received_oid)
-            sent = self.get_snmp_data(sent_oid)
-
-            print(f"当前接口: {self.selected_interface}, 接收: {received}, 发送: {sent}")
+            print(f"收到: {received}, 发送: {sent}")
 
             if received is None or sent is None:
                 self.running = False
@@ -225,15 +217,17 @@ class SNMPMonitor:
                 return
 
             if not self.header_logged:
-                self.log_file.write("\n以下来自network_monitor_choose_OID\n")
+                self.log_file.write("\n以下来自network_monitor\n")
                 self.header_logged = True
 
-            now = time.time()
-            self.log_file.write(f"时间: {now}, 接口: {self.selected_interface}, 接收: {received}, 发送: {sent}\n")
+            self.log_file.write(f"时间: {time.time()}, 接收OID: {self.received_oid}, 接收: {received}, "
+                                f"发送OID: {self.sent_oid}, 发送: {sent}\n")
 
+            current_time = time.time()
             if not self.times:
-                self.start_time = now
-            self.times.append(now - self.start_time)
+                self.start_time = current_time
+
+            self.times.append(current_time - self.start_time)
             self.received_data.append(received)
             self.sent_data.append(sent)
 
@@ -300,4 +294,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-    input("Press Enter to exit...")
