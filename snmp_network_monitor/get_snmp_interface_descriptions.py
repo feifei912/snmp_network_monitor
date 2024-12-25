@@ -22,3 +22,4 @@ def get_interface_descriptions():
 # 调用函数来获取接口描述
 if __name__ == '__main__':
     get_interface_descriptions()
+    input("Press Enter to exit...")
